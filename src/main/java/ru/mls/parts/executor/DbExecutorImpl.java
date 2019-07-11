@@ -30,18 +30,9 @@ public class DbExecutorImpl<T> implements DbExecutor<T> {
     public List<T> selectAllRecords(String sql, Function<ResultSet, T> rsHandler) throws SQLException {
         List<T> listRecords = new ArrayList<>();
         try (PreparedStatement pst = this.connection.prepareStatement(sql)) {
-            try (ResultSet rs = pst.executeQuery()) {
-                while (true) {
-                    Optional<T> record = Optional.ofNullable(rsHandler.apply(rs));
-                    if (record != Optional.empty()) {
-                        listRecords.add(record.get());
-                    } else {
-                        break;
-                    }
-                }
-            }
-            return listRecords;
+            listRecords=fillListRecords(pst,rsHandler);
         }
+        return listRecords;
     }
 
     @Override
@@ -49,7 +40,6 @@ public class DbExecutorImpl<T> implements DbExecutor<T> {
         List<T> listRecords = new ArrayList<>();
         try (PreparedStatement pst = this.connection.prepareStatement(sql)) {
             for (int idx = 0; idx < params.size(); idx++) {
-                //TOdo params!
                 var paramForSql = params.get(idx);
 
                 if (paramForSql instanceof Date) {
@@ -60,19 +50,25 @@ public class DbExecutorImpl<T> implements DbExecutor<T> {
                     pst.setString(idx + 1, "%" + paramForSql + "%");
                 }
             }
-            try (ResultSet rs = pst.executeQuery()) {
-                while (true) {
-                    Optional<T> record = Optional.ofNullable(rsHandler.apply(rs));
-                    if (record != Optional.empty()) {
-                        listRecords.add(record.get());
-                    } else {
-                        break;
-                    }
-                }
-            }
+            listRecords=fillListRecords(pst,rsHandler);
         } catch (
                 SQLException e) {
             e.printStackTrace();
+        }
+        return listRecords;
+    }
+
+    private List<T> fillListRecords(PreparedStatement pst ,Function<ResultSet, T> rsHandler) throws SQLException {
+        List<T> listRecords = new ArrayList<>();
+        try (ResultSet rs = pst.executeQuery()) {
+            while (true) {
+                Optional<T> record = Optional.ofNullable(rsHandler.apply(rs));
+                if (record != Optional.empty()) {
+                    listRecords.add(record.get());
+                } else {
+                    break;
+                }
+            }
         }
         return listRecords;
     }
