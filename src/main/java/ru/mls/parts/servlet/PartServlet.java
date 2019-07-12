@@ -22,8 +22,8 @@ import java.util.Map;
 
 @WebServlet("/")
 public class PartServlet extends HttpServlet {
-    DBService<Part> dbService;
-    DataSource dataSource;
+    private DBService<Part> dbService;
+    private DataSource dataSource;
 
     public PartServlet() {
         dataSource = new DataSourceH2();
